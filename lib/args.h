@@ -30,7 +30,7 @@ typedef struct {
 static const struct {
     const char* literal;
     bool expects_input;
-} valid_args[] = {
+} valid_flags[] = {
     {"-h", false},
     {"--help", false},
     {"-a", true}, 
@@ -38,12 +38,12 @@ static const struct {
 };
 
 static inline size_t valid_arg_count() {
-    return sizeof(valid_args) / sizeof(Arg);
+    return sizeof(valid_flags) / sizeof(Arg);
 }
 
 static bool is_valid_arg(const char* arg) {
     for (int i = 0; i < valid_arg_count(); i++) {
-        if (strcmp(arg, valid_args[i].literal) == 0) return true;
+        if (strcmp(arg, valid_flags[i].literal) == 0) return true;
     }
     return false;
 }
@@ -62,8 +62,8 @@ ParseResult parse_args(Arena* arena, int count, char** args) {
         bool found_match = false;
 
         for (int k = 0; k < valid_arg_count(); k++) {
-            if (strcmp(literal, valid_args[k].literal) == 0) {
-                if (!valid_args[k].expects_input) {
+            if (strcmp(literal, valid_flags[k].literal) == 0) {
+                if (!valid_flags[k].expects_input) {
                     result[index++] = (Arg){.literal = arena_strdup(arena, literal), .input = NULL};
                     found_match = true;
                     break;
