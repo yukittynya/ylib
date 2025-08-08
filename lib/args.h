@@ -2,20 +2,22 @@
 *
 *   args parser :3
 *
-*   frontend: list of args
-*
 */
 
 #ifndef ARGS_H
 #define ARGS_H
 
-#define USING_ARENA
 #include "arena.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef struct {
+    const char* literal;
+    bool expects_input;
+} ValidFlag;
 
 typedef struct {
     const char* literal;
@@ -27,10 +29,16 @@ typedef struct {
     int count;
 } ParseResult;
 
-static const struct {
-    const char* literal;
-    bool expects_input;
-} valid_flags[] = {
+/*
+*
+*   Define your flags here! 
+*
+*   {flag, expects input}
+*   E.g. {"-h", false}
+*
+*/
+
+static const ValidFlag valid_flags[] = {
     {"-h", false},
     {"--help", false},
     {"-a", true}, 
@@ -48,11 +56,9 @@ static bool is_valid_arg(const char* arg) {
     return false;
 }
 
-ParseResult parse_args(Arena* arena, int count, char** args);
+static ParseResult parse_args(Arena* arena, int count, char** args);
 
-#ifdef USING_ARGS
-
-ParseResult parse_args(Arena* arena, int count, char** args) {
+static inline ParseResult parse_args(Arena* arena, int count, char** args) {
     Arg* result = arena_array(arena, Arg, count);
 
     int index = 0;
@@ -101,7 +107,5 @@ ParseResult parse_args(Arena* arena, int count, char** args) {
 
     return (ParseResult) {.args = result, .count = index};
 }
-
-#endif
 
 #endif // !ARGS_H
