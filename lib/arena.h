@@ -37,22 +37,20 @@ typedef struct {
     Block* end;
 } Arena;
 
-Block* new_block(size_t size);
-void free_block(Block* block);
+static Block* new_block(size_t size);
+static void free_block(Block* block);
 
-void* arena_alloc(Arena* arena, size_t size);
-void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size);
-void* arena_memset(void* ptr, int value, size_t len);
-void* arena_memcpy(void* dest, const void* src, size_t len);
-char* arena_strdup(Arena* arena, const char* str);
+static void* arena_alloc(Arena* arena, size_t size);
+static void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size);
+static void* arena_memset(void* ptr, int value, size_t len);
+static void* arena_memcpy(void* dest, const void* src, size_t len);
+static char* arena_strdup(Arena* arena, const char* str);
 
-void arena_reset(Arena* arena);
-void arena_free(Arena* arena); 
+static void arena_reset(Arena* arena);
+static void arena_free(Arena* arena); 
 
-size_t total_capacity(Arena* arena);
-size_t total_usage(Arena* arena); 
-
-#ifdef USING_ARENA
+static size_t total_capacity(Arena* arena);
+static size_t total_usage(Arena* arena); 
 
 static inline size_t align_size(size_t size) {
     return (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
@@ -64,7 +62,7 @@ static inline size_t _strlen(const char* str) {
     return len;
 }
 
-Block* new_block(size_t size) {
+static Block* new_block(size_t size) {
     size_t capacity = DEFAULT_CAPACITY;
 
     while (size > capacity * sizeof(uintptr_t)) capacity *= 2;
@@ -81,11 +79,11 @@ Block* new_block(size_t size) {
     return block;
 }
 
-void free_block(Block* block) {
+static inline void free_block(Block* block) {
     free(block);
 }
 
-void* arena_alloc(Arena* arena, size_t size) {
+static void* arena_alloc(Arena* arena, size_t size) {
     size = align_size(size);
 
     if (arena -> end == NULL && arena -> start == NULL) {
@@ -109,25 +107,25 @@ void* arena_alloc(Arena* arena, size_t size) {
     return result;
 }
 
-void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size) {
+static void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size) {
     if (new_size <= old_size) return ptr;
 
     void* result = arena_alloc(arena, new_size);
-    char* new = (char*) result;
-    char* old = (char*) ptr;
+    char* new_ptr = (char*) result;
+    char* old_ptr = (char*) ptr;
 
     for (size_t i = 0; i < old_size; i++) {
-        new[i] = old[i];
+        new_ptr[i] = old_ptr[i];
     }
 
     for (size_t i = old_size; i < new_size; i++) {
-        new[i] = 0;
+        new_ptr[i] = 0;
     }
 
     return result;
 }
 
-void* arena_memset(void* ptr, int value, size_t len) {
+static void* arena_memset(void* ptr, int value, size_t len) {
     char* p = (char*) ptr;
     char byte_value = (char) value;
 
@@ -139,7 +137,7 @@ void* arena_memset(void* ptr, int value, size_t len) {
     return ptr;
 } 
 
-void* arena_memcpy(void* dest, const void* src, size_t len) {
+static void* arena_memcpy(void* dest, const void* src, size_t len) {
     char* d = dest;
     const char* s = src;
 
@@ -151,7 +149,7 @@ void* arena_memcpy(void* dest, const void* src, size_t len) {
     return dest;
 }
 
-char* arena_strdup(Arena* arena, const char* str) {
+static char* arena_strdup(Arena* arena, const char* str) {
     size_t len = _strlen(str);
     char* duplicate = (char*) arena_alloc(arena, len + 1);
 
@@ -161,14 +159,14 @@ char* arena_strdup(Arena* arena, const char* str) {
     return duplicate;
 }
 
-void arena_reset(Arena* arena) {
+static inline void arena_reset(Arena* arena) {
     for (Block* block = arena -> start; block != NULL; block = block -> next) {
         block -> usage = 0;
     }
     arena -> end = arena -> start;
 }
 
-void arena_free(Arena* arena) {
+static void arena_free(Arena* arena) {
     Block* block = arena -> start;
 
     while (block != NULL) {
@@ -181,7 +179,7 @@ void arena_free(Arena* arena) {
     arena -> end = NULL;
 }
 
-size_t total_capacity(Arena* arena) {
+static size_t total_capacity(Arena* arena) {
     Block* current = arena -> start;
     size_t total = 0;
 
@@ -193,7 +191,7 @@ size_t total_capacity(Arena* arena) {
     return total;
 }
 
-size_t total_usage(Arena* arena) {
+static size_t total_usage(Arena* arena) {
     Block* current = arena -> start;
     size_t total = 0;
 
@@ -204,7 +202,5 @@ size_t total_usage(Arena* arena) {
     
     return total;
 }
-
-#endif
 
 #endif // !ARENA_H
